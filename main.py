@@ -99,10 +99,10 @@ def create_basic_models(df):
     pickle.dump(model.model, open('models/multinomial_model.pickle', 'wb'))
     pickle.dump(model.vec, open('models/multinomial_vec.pickle', 'wb'))
 
-    model = Model(df, model=KNeighborsClassifier(), k_fold=5)
-    model.create_model()
-    pickle.dump(model.model, open('models/knn_model.pickle', 'wb'))
-    pickle.dump(model.vec, open('models/knn_vec.pickle', 'wb'))
+    # model = Model(df, model=KNeighborsClassifier(), k_fold=5)
+    # model.create_model()
+    # pickle.dump(model.model, open('models/knn_model.pickle', 'wb'))
+    # pickle.dump(model.vec, open('models/knn_vec.pickle', 'wb'))
 
     model = Model(df, model=RandomForestClassifier(), k_fold=5, vec='tfid')
     model.create_model()
@@ -168,7 +168,7 @@ if __name__ == "__main__":
     clean = Clean(df)
     print(clean.df)
     print(clean.df['Label'].value_counts())
-    create_basic_models(clean.df)
+    # create_basic_models(clean.df)
 
     # try:
     #     forest = random_forest((clean.df))

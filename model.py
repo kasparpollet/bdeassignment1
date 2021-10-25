@@ -27,13 +27,13 @@ class Model:
 
     def __count_vectorize(self):
         print('\nCreating CountVectorizer...')
-        vec = CountVectorizer(lowercase=True, stop_words='english', ngram_range=(1,2), max_features=800)
+        vec = CountVectorizer(lowercase=True, stop_words='english', ngram_range=(1,2), max_features=500)
         matrix = self.__create_matrix_df(vec)
         return matrix
 
     def __tfidf_vectorize(self):
         print('\nCreating TfidfVectorizer...')
-        vec = TfidfVectorizer(lowercase=True, stop_words='english', ngram_range=(1,2), max_features=800)     
+        vec = TfidfVectorizer(lowercase=True, stop_words='english', ngram_range=(1,2), max_features=500)     
         matrix = self.__create_matrix_df(vec)
         return matrix
 
