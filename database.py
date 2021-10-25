@@ -1,6 +1,7 @@
 import pandas as pd
 import os
 import pymysql
+from sqlalchemy import create_engine
 
 class DataBase:
     """
@@ -10,13 +11,14 @@ class DataBase:
     
     def __init__(self):
         print('\nCreating database connection...')
-        self.engine = pymysql.connect(host='localhost',user='root', password=os.getenv('DATABASE_PASSWORD'), database='assignment1', cursorclass=pymysql.cursors.DictCursor)
+        self.engine = pymysql.connect(host='localhost',user=os.getenv('DATABASE_USERNAME'), password=os.getenv('DATABASE_PASSWORD'), database='assignment1', cursorclass=pymysql.cursors.DictCursor)
+        self.put_engine = create_engine(os.getenv('DATABASE_URL'))
 
     def upload_data(self, df, name, error='fail'):
         """
         Upload a given pandas dataframe to the database wth a given table name
         """
-        df.to_sql(name=name,con=self.engine,if_exists=error,index=False,chunksize=1000) 
+        df.to_sql(name=name,con=self.put_engine,if_exists=error,index=False,chunksize=1000) 
 
     def get_from_db(self):
         """

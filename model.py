@@ -27,13 +27,13 @@ class Model:
 
     def __count_vectorize(self):
         print('\nCreating CountVectorizer...')
-        vec = CountVectorizer(lowercase=True, stop_words='english', ngram_range=(1,2), max_features=500)
+        vec = CountVectorizer(lowercase=True, stop_words='english', ngram_range=(1,2), max_features=800)
         matrix = self.__create_matrix_df(vec)
         return matrix
 
     def __tfidf_vectorize(self):
         print('\nCreating TfidfVectorizer...')
-        vec = TfidfVectorizer(lowercase=True, stop_words='english', ngram_range=(1,2), max_features=500)     
+        vec = TfidfVectorizer(lowercase=True, stop_words='english', ngram_range=(1,2), max_features=800)     
         matrix = self.__create_matrix_df(vec)
         return matrix
 
@@ -110,4 +110,4 @@ class Model:
             print(f'Confusion Matrix:\n', confusion_matrix(y_test, y_pred))
             print(f'Classification Report:\n', classification_report(y_test, y_pred))
 
-        return self.model
+        return self

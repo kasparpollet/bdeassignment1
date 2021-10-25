@@ -78,20 +78,41 @@ def get_data():
     """
     # Get all dataframes
     data_set_reviews = get_reviews_from_file()
-    written_reviews = get_written_reviews()
+    # written_reviews = get_written_reviews()
     scraped_data = get_scraped_reviews()
     print('scraped data: \n', scraped_data.count())
-    print('written data: \n', written_reviews.count())
+    # print('written data: \n', written_reviews.count())
     print('kaggle data: \n', data_set_reviews.count())
 
     # Combine dataframes
-    reviews = pd.concat([data_set_reviews, written_reviews, scraped_data])
+    reviews = pd.concat([data_set_reviews, scraped_data])
 
     # Shuffle and reindex final dataframe
     reviews = reviews.sample(frac=1)
     reviews.reset_index(inplace=True, drop=True)
 
     return reviews
+
+def create_basic_models(df):
+    model = Model(df, model=MultinomialNB(), k_fold=5, vec='tfid')
+    model.create_model()
+    pickle.dump(model.model, open('models/multinomial_model.pickle', 'wb'))
+    pickle.dump(model.vec, open('models/multinomial_vec.pickle', 'wb'))
+
+    model = Model(df, model=KNeighborsClassifier(), k_fold=5)
+    model.create_model()
+    pickle.dump(model.model, open('models/knn_model.pickle', 'wb'))
+    pickle.dump(model.vec, open('models/knn_vec.pickle', 'wb'))
+
+    model = Model(df, model=RandomForestClassifier(), k_fold=5, vec='tfid')
+    model.create_model()
+    pickle.dump(model.model, open('models/random_forest_model.pickle', 'wb'))
+    pickle.dump(model.vec, open('models/random_forest_vec.pickle', 'wb'))
+
+    model = Model(df, model=LogisticRegression(solver='liblinear'), k_fold=5, vec='tfid')
+    model.create_model()
+    pickle.dump(model.model, open('models/logistic_regression_model.pickle', 'wb'))
+    pickle.dump(model.vec, open('models/logistic_regression_vec.pickle', 'wb'))
 
 def logstic_regression(df):
     model = Model(df, model=LogisticRegression(solver='liblinear'), k_fold=5, vec='tfid')
@@ -139,34 +160,28 @@ def __init__():
 if __name__ == "__main__":
     __init__()
 
-    # Create a database connection
     db = DataBase()
-
-    # df = pd.read_csv('reviews/cleaned_reviews.csv')
     df = db.get_filtered_from_db()
 
-    # df = df.iloc[:2000]
+    # df = df.iloc[:10000]
 
     clean = Clean(df)
     print(clean.df)
     print(clean.df['Label'].value_counts())
+    create_basic_models(clean.df)
 
-    # clean.df.to_csv('reviews/cleaned_reviews.csv', index=False)
+    # try:
+    #     forest = random_forest((clean.df))
+    #     pickle.dump(forest.model, open('models/forest_model_gridsearch.pickle', 'wb'))
+    #     pickle.dump(forest.vec, open('models/forest_vec_gridsearch.pickle', 'wb'))
+    # except Exception as e:
+    #     print(e)
 
-    # model = Model(clean.df, model=KNeighborsClassifier(n_neighbors=11))
-    # model = Model(clean.df, model=MultinomialNB(), vec='tfid')
+    # try:
+    #     logistic = logstic_regression(clean.df)
+    #     pickle.dump(logistic.model, open('models/logitic_model_gridsearch.pickle', 'wb'))
+    #     pickle.dump(logistic.vec, open('models/logitic_vec_gridsearch.pickle', 'wb'))
+    # except Exception as e:
+    #     print(e)
 
-    try:
-        forest = random_forest((clean.df))
-        pickle.dump(forest, open('models/forest_model_gridsearch.pickle', 'wb'))
-    except Exception as e:
-        print(e)
-
-    try:
-        pass
-        logistic = logstic_regression(clean.df)
-        pickle.dump(logistic, open('models/logitic_model_gridsearch.pickle', 'wb'))
-    except Exception as e:
-        print(e)
-
-    # clean.display_wordcloud()
+    clean.display_wordcloud()
