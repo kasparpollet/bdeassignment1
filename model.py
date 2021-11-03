@@ -1,9 +1,10 @@
 import numpy as np
 import pandas as pd
 import time
+import matplotlib.pyplot as plt
 
 from sklearn.model_selection import train_test_split, KFold, GridSearchCV
-from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score, roc_curve, roc_auc_score
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
@@ -50,6 +51,7 @@ class Model:
         sc = StandardScaler()
         pipe = Pipeline(steps=[('sc', sc),('model', self.model)])
         grid_search = GridSearchCV(pipe, params, cv=5)
+        print('YHEAAAA')
         grid_search.fit(self.vec, self.df['Label'])
 
         end = time.time()
@@ -109,5 +111,20 @@ class Model:
             print(f'Avarage score: {avg_acc_score}')
             print(f'Confusion Matrix:\n', confusion_matrix(y_test, y_pred))
             print(f'Classification Report:\n', classification_report(y_test, y_pred))
+
+
+        y_pred_prob = self.model.predict_proba(X_test)[:, 1]
+        fpr, tpr, thresholds = roc_curve(y_test, y_pred_prob)
+        auc_score = roc_auc_score(y_test, y_pred_prob)
+        print('ROC AUC:', auc_score)
+
+        plt.plot(fpr, tpr)
+        plt.xlim([0.0, 1.0])
+        plt.ylim([0.0, 1.0])
+        plt.rcParams['font.size'] = 12
+        plt.title(f'ROC curve for reviews (AUC: {auc_score})')
+        plt.xlabel('False Positive Rate (1 - Specificity)')
+        plt.ylabel('True Positive Rate (Sensitivity)')
+        plt.grid(True)
 
         return self

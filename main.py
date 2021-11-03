@@ -2,6 +2,8 @@ from math import log
 import pandas as pd
 import numpy as np
 import pickle
+import matplotlib.pyplot as plt
+
 # import plotly.express as px
 from dotenv import load_dotenv
 from scipy.sparse.sputils import matrix
@@ -10,6 +12,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import MultinomialNB
+from sklearn.svm import SVC
 
 from scrapper import Scrapper
 from database import DataBase
@@ -96,38 +99,49 @@ def get_data():
 def create_basic_models(df):
     model = Model(df, model=MultinomialNB(), k_fold=5, vec='tfid')
     model.create_model()
-    pickle.dump(model.model, open('models/multinomial_model.pickle', 'wb'))
-    pickle.dump(model.vec, open('models/multinomial_vec.pickle', 'wb'))
+    # pickle.dump(model.model, open('models/multinomial_model.pickle', 'wb'))
+    # pickle.dump(model.vec, open('models/multinomial_vec.pickle', 'wb'))
 
-    # model = Model(df, model=KNeighborsClassifier(), k_fold=5)
+    model = Model(df, model=LogisticRegression())
+    model.create_model()
+    # pickle.dump(model.model, open('models/logistic_regression_model.pickle', 'wb'))
+    # pickle.dump(model.vec, open('models/logistic_regression_vec.pickle', 'wb'))
+
+    model = Model(df, model=RandomForestClassifier())
+    model.create_model()
+    # pickle.dump(model.model, open('models/random_forest_model.pickle', 'wb'))
+    # pickle.dump(model.vec, open('models/random_forest_vec.pickle', 'wb'))
+
+    # model = Model(df, model=SVC(), k_fold=5)
     # model.create_model()
     # pickle.dump(model.model, open('models/knn_model.pickle', 'wb'))
     # pickle.dump(model.vec, open('models/knn_vec.pickle', 'wb'))
 
-    model = Model(df, model=RandomForestClassifier(), k_fold=5, vec='tfid')
-    model.create_model()
-    pickle.dump(model.model, open('models/random_forest_model.pickle', 'wb'))
-    pickle.dump(model.vec, open('models/random_forest_vec.pickle', 'wb'))
 
-    model = Model(df, model=LogisticRegression(solver='liblinear'), k_fold=5, vec='tfid')
-    model.create_model()
-    pickle.dump(model.model, open('models/logistic_regression_model.pickle', 'wb'))
-    pickle.dump(model.vec, open('models/logistic_regression_vec.pickle', 'wb'))
+
 
 def logstic_regression(df):
-    model = Model(df, model=LogisticRegression(solver='liblinear'), k_fold=5, vec='tfid')
+    model = Model(df, model=LogisticRegression(), k_fold=5, vec='tfid')
 
     best_params = model.grid_search({
+        'model__solver': ['sag', 'saga'],
         'model__penalty': ['l1','l2'], 
-        'model__C': np.logspace(-4, 4, 50)
+        'model__C': np.logspace(-2,2,5),
+        # 'model__max_iter':[100, 200, 300]
     })
 
+    solver = best_params.best_estimator_.get_params()['model__solver']
     C = best_params.best_estimator_.get_params()['model__C']
     penalty = best_params.best_estimator_.get_params()['model__penalty']
-    print(f'Best C:', C)
-    print(f'Best Penalty:', penalty)
+    max_iter = best_params.best_estimator_.get_params()['model__max_iter']
+    print('Best solver:', solver)
+    print('Best C:', C)
+    print('Best Penalty:', penalty)
+    print('Best max_iter:', max_iter)
+    model.model.solver = solver
     model.model.C = C
     model.model.penalty = penalty
+    model.model.max_iter = max_iter
 
     logistic = model.create_model()
 
@@ -137,7 +151,7 @@ def random_forest(df):
     model = Model(df, model=RandomForestClassifier(), k_fold=5, vec='tfid')
 
     best_params = model.grid_search({
-        'model__n_estimators': list(range(30,121,10)), 
+        'model__n_estimators': list(range(31,121,10)), 
         'model__max_features': list(range(3,19,5))
     })
 
@@ -163,13 +177,16 @@ if __name__ == "__main__":
     db = DataBase()
     df = db.get_filtered_from_db()
 
+    df['Label'] = df['Label'].apply(lambda x: 1 if x=='Positive' else 0)
+
     # df = df.iloc[:10000]
 
     clean = Clean(df)
-    print(clean.df)
-    print(clean.df['Label'].value_counts())
+    # print(clean.df)
+    # print(clean.df['Label'].value_counts())
     # create_basic_models(clean.df)
 
+    plt.show()
     # try:
     #     forest = random_forest((clean.df))
     #     pickle.dump(forest.model, open('models/forest_model_gridsearch.pickle', 'wb'))
@@ -177,11 +194,11 @@ if __name__ == "__main__":
     # except Exception as e:
     #     print(e)
 
-    # try:
-    #     logistic = logstic_regression(clean.df)
-    #     pickle.dump(logistic.model, open('models/logitic_model_gridsearch.pickle', 'wb'))
-    #     pickle.dump(logistic.vec, open('models/logitic_vec_gridsearch.pickle', 'wb'))
-    # except Exception as e:
-    #     print(e)
+    try:
+        logistic = logstic_regression(clean.df)
+        # pickle.dump(logistic.model, open('models/logitic_model_gridsearch.pickle', 'wb'))
+        # pickle.dump(logistic.vec, open('models/logitic_vec_gridsearch.pickle', 'wb'))
+    except Exception as e:
+        print(e)
 
-    clean.display_wordcloud()
+    # clean.display_wordcloud()
